@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Generator</title>
+
+</head>
+<body>
+<form target="_blank" enctype="text/plain" form="" method="get" name="ASN_Summary"><font size="-1"><span style="font-style: italic;">This is a simple web dashboard
+to get the external peering summary for particular AS Number</span><br style="font-style: italic;">
+</font><br>
+<table style="text-align: left; width: 265px; height: 110px;" border="1" cellpadding="2" cellspacing="2">
+<tbody>
+<tr style="font-weight: bold;">
+<td colspan="6">External Peering Summary Generator</td>
+</tr>
+<tr>
+<td>AS Number</td>
+<td> <input name="txtASN" onkeypress='return event.charCode >= 48 && event.charCode <= 57'></td>
+</tr>
+<tr>
+<td></td>
+<td><button accesskey="G" name="btn_Generate" type="button" onclick="Generate()">Generate</button>
+<script>
+ function Generate()
+ { 
+
+                if(document.ASN_Summary.txtASN.value == "")
+                {
+                    alert("Please input the AS Number");
+                }
+				else
+				{
+                window.location.href = "http://localhost:8000/cgi-bin/ASN_Summaryv3.py?param1="+document.ASN_Summary.txtASN.value;
+				}
+}
+</script></td>
+</tr>
+</tbody>
+</table>
+<br>
+<br>
+</form>
+</body></html>

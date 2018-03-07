@@ -1,16 +1,26 @@
+#!/usr/bin/python
+
 import json
 import sys
 import requests
+import cgi;
+import cgitb
+cgitb.enable()
 reload(sys)
 sys.setdefaultencoding("UTF8")
+
+#CGI to get input from HTML
+form = cgi.FieldStorage()
+param1=form["param1"].value
 
 #Receive AS Number as argument 
 try:
         if sys.argv[1]:
                 ASN= sys.argv[1]
 except:
-        print "Usage: 'ASN_Summary [AS_Number]'"
-        sys.exit()
+        ASN=param1
+        #print "Usage: 'ASN_Summary [AS_Number]'"
+        #sys.exit()
 
 #Took the content from API
 content= json.loads(requests.get("https://peeringdb.com/api/netixlan?asn="+str(ASN)).content)
@@ -112,11 +122,12 @@ html+='''
 </body>
 </html>
 '''
-f=open("Summary.html","w")
-f.write(html)
-f.close()
+#f=open("C:\\Summary.html","w")
+#f.write(html)
+#f.close()
 
-#print feedback
-print "Summary File created > Summary.html, Please open the file for the summary"
+#print the output to HTML instead of files
+print html
+
 
 
