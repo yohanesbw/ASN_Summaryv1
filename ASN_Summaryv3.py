@@ -61,7 +61,7 @@ for i in Exchange:
         html_detail+='<td width="100">Speed</td>'
         html_detail+='<td width="80">'+ str(j['speed']) +' M</td></tr>'
     html_detail+='</tr>'
-    html_detail+='<tr></td><td></td><td></td><td></td><td></td><td>Total Speed</td><td>'+ str(Total_Speed)+' M</td> </tr>'
+    html_detail+='<tr></td><td></td><td></td><td></td><td></td><td>Total Speed</td><td>'+ str(Speed)+' M</td> </tr>'
 
 
 #Create HTML File as an Output Result
