@@ -1,9 +1,11 @@
 #!/usr/bin/python
 
+import mysql.connector
+import datetime
 import json
 import sys
 import requests
-import cgi;
+import cgi
 import cgitb
 cgitb.enable()
 reload(sys)
@@ -36,11 +38,25 @@ for i in content['data']:
     Peer_Detail.insert(0,i)
     Exchange[str(i['ix_id'])]=Peer_Detail
 
-                       
-# Create the Detail summary for reporting
-Exchange_Total=0
-Total_Uniq=0
-Total_Speed=0
+# MySQLDB
+config = {
+  'user': 'yohanesbw',
+  'password': 'test123',
+  'host': '127.0.0.1',
+  'database': 'Summary_DB',
+  'raise_on_warnings': True,
+  'use_pure': False,
+}
+conn = mysql.connector.connect(**config)
+conn.close()
+# date_time
+# ASN
+# Exchange_Total
+# Total_Uniq
+# Total Speed
+# content
+
+#process the content
 html_detail='''
 <br>
 <br>
@@ -51,6 +67,12 @@ html_detail='''
  border="1" cellpadding="2" cellspacing="2">
   <tbody>
 '''
+
+# Process the data for reporting
+Exchange_Total=0
+Total_Uniq=0
+Total_Speed=0
+
 for i in Exchange:
     Total_Uniq+=1
     Speed=0
@@ -64,67 +86,14 @@ for i in Exchange:
         html_detail+='<td>'+ j['ipaddr4'] +'</td>'
         if j['ipaddr6'] :
                 html_detail+='<td width="180">IPV6 Peering Address</td>'
-                html_detail+='<td>'+ j['ipaddr6'] +'</td>'
+                html_detail+='<td>'+ j['ipaddr6'] +'</td>'          
         else:
                 html_detail+='<td width="180">IPV6 Peering Address</td>'
                 html_detail+='<td></td>'                
         html_detail+='<td width="100">Speed</td>'
         html_detail+='<td width="80">'+ str(j['speed']) +' M</td></tr>'
-    html_detail+='</tr>'
     html_detail+='<tr></td><td></td><td></td><td></td><td></td><td>Total Speed</td><td>'+ str(Speed)+' M</td> </tr>'
-
-
-#Create HTML File as an Output Result
-html='''
-<html>
-<body>
-
-<font size="+2"><span
- style="color: rgb(0, 102, 0); font-weight: bold;">Executive
-Summary for AS-'''+str(ASN)+\
-'''
-:<br>
-</span></font>
-<table style="text-align: left; width: 523px; height: 116px;"
- border="0" cellpadding="2" cellspacing="2">
-  <tbody>
-    <tr>
-      <td style="font-weight: bold;">Total Peering</td>
-      <td>'''+ str(Exchange_Total) +\
-'''
-</td>
-    </tr>
-    <tr>
-      <td style="font-weight: bold;">Total Unique
-Organization Peering</td>
-      <td>'''+str(Total_Uniq) +\
-'''
-</td>
-    </tr>
-    <tr>
-      <td style="font-weight: bold;">Total Aggregate Speed</td>
-      <td>'''+str(Total_Speed/1000) +\
-'''
-G</td>
-    </tr>
-
-  </tbody>
-</table>
-<font size="+2"><span
- style="color: rgb(0, 102, 0); font-weight: bold;"></span></font>
-
-
-
-'''
-html+=html_detail
-html+='''
-</tbody> </table>
-</body>
-</html>
-'''
-#f=open("C:\\Summary.html","w")
-#f.write(html)
-#f.close()
+html_detail+='<\table>'
 
 #print the output to HTML instead of files
 print html
