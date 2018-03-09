@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import mysql.connector
-import datetime
+from datetime import date, datetime
 import json
 import sys
 import requests
@@ -11,7 +11,7 @@ cgitb.enable()
 reload(sys)
 sys.setdefaultencoding("UTF8")
 
-#CGI to get input from HTML
+#Get the parameter from HTML 
 form = cgi.FieldStorage()
 param1=form["param1"].value
 
@@ -24,9 +24,8 @@ except:
         #print "Usage: 'ASN_Summary [AS_Number]'"
         #sys.exit()
 
-#Took the content from API
+#Take the content from API
 content= json.loads(requests.get("https://peeringdb.com/api/netixlan?asn="+str(ASN)).content)
-
 
 # create dictionary to have primary key in ix_id
 # and content as List of peering detail                      
@@ -38,25 +37,7 @@ for i in content['data']:
     Peer_Detail.insert(0,i)
     Exchange[str(i['ix_id'])]=Peer_Detail
 
-# MySQLDB
-config = {
-  'user': 'yohanesbw',
-  'password': 'test123',
-  'host': '127.0.0.1',
-  'database': 'Summary_DB',
-  'raise_on_warnings': True,
-  'use_pure': False,
-}
-conn = mysql.connector.connect(**config)
-conn.close()
-# date_time
-# ASN
-# Exchange_Total
-# Total_Uniq
-# Total Speed
-# content
-
-#process the content
+#Prepare the html
 html_detail='''
 <br>
 <br>
@@ -93,10 +74,76 @@ for i in Exchange:
         html_detail+='<td width="100">Speed</td>'
         html_detail+='<td width="80">'+ str(j['speed']) +' M</td></tr>'
     html_detail+='<tr></td><td></td><td></td><td></td><td></td><td>Total Speed</td><td>'+ str(Speed)+' M</td> </tr>'
-html_detail+='<\table>'
 
-#print the output to HTML instead of files
+#Create HTML File as an Output Result
+html='''
+<html>
+<body>
+<font size="+2"><span
+ style="color: rgb(0, 102, 0); font-weight: bold;">Executive
+Summary for AS-'''+str(ASN)+\
+'''
+:<br>
+</span></font>
+<table style="text-align: left; width: 523px; height: 116px;"
+ border="0" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="font-weight: bold;">Total Peering</td>
+      <td>'''+ str(Exchange_Total) +\
+'''
+</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold;">Total Unique
+Organization Peering</td>
+      <td>'''+str(Total_Uniq) +\
+'''
+</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold;">Total Aggregate Speed</td>
+      <td>'''+str(Total_Speed/1000) +\
+'''
+G</td>
+    </tr>
+  </tbody>
+</table>
+<font size="+2"><span
+ style="color: rgb(0, 102, 0); font-weight: bold;"></span></font>
+'''
+html+=html_detail
+html+='''
+</tbody> </table>
+</body>
+</html>
+'''
+
+#print the output to HTML format
 print html
 
+# Storing the result to MySQLDB
+config = {
+  'user': 'admin',
+  'password': 'admin123',
+  'host': '127.0.0.1',
+  'database': 'ASN_Summary',
+  'raise_on_warnings': True,
+  'use_pure': False,
+}
+conn = mysql.connector.connect(**config)
+cursor=conn.cursor()
+Report_Time=datetime.now().isoformat()
+# ASN
+# Report_Time
+# Exchange_Total
+# Total_Uniq
+# Total Speed
+# html_detail
+query="INSERT INTO Report_Summary ASN,Report_Time,Exchange_Total,Total_Uniq,Total_Speed,html_detail\
+                VALUES {0},{1},{2},{3},{4},{5}".format(ASN,Report_Time,Exchange_Total,Total_Uniq,Total_Speed,html_detail)
+cursor.execute(query)
+conn.commit()
 
-
+cursor.close()
+conn.close()
