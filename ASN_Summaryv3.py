@@ -53,6 +53,7 @@ html_detail='''
 Exchange_Total=0
 Total_Uniq=0
 Total_Speed=0
+Peering={}
 
 for i in Exchange:
     Total_Uniq+=1
@@ -74,7 +75,8 @@ for i in Exchange:
         html_detail+='<td width="100">Speed</td>'
         html_detail+='<td width="80">'+ str(j['speed']) +' M</td></tr>'
     html_detail+='<tr></td><td></td><td></td><td></td><td></td><td>Total Speed</td><td>'+ str(Speed)+' M</td> </tr>'
-
+    Peering[Exchange[i][0]['name']]=str(Speed)
+        
 #Create HTML File as an Output Result
 html='''
 <html>
@@ -145,5 +147,11 @@ query="INSERT INTO Report_Summary ASN,Report_Time,Exchange_Total,Total_Uniq,Tota
 cursor.execute(query)
 conn.commit()
 
+#additional table for charting #next feature if
+for i in Peering:
+        query="INSERT into Peering_Detail peer,totalspeed VALUE {0},{1}".format(i,Peering[i])
+        cursor.execute(query)
+        conn.commit()
+        
 cursor.close()
 conn.close()
