@@ -1,15 +1,17 @@
 #!/usr/bin/python
 
+import mysql.connector
+from datetime import date, datetime
 import json
 import sys
 import requests
-import cgi;
+import cgi
 import cgitb
 cgitb.enable()
 reload(sys)
 sys.setdefaultencoding("UTF8")
 
-#CGI to get input from HTML
+#Get the parameter from HTML 
 form = cgi.FieldStorage()
 param1=form["param1"].value
 
@@ -22,9 +24,8 @@ except:
         #print "Usage: 'ASN_Summary [AS_Number]'"
         #sys.exit()
 
-#Took the content from API
+#Take the content from API
 content= json.loads(requests.get("https://peeringdb.com/api/netixlan?asn="+str(ASN)).content)
-
 
 # create dictionary to have primary key in ix_id
 # and content as List of peering detail                      
@@ -36,11 +37,7 @@ for i in content['data']:
     Peer_Detail.insert(0,i)
     Exchange[str(i['ix_id'])]=Peer_Detail
 
-                       
-# Create the Detail summary for reporting
-Exchange_Total=0
-Total_Uniq=0
-Total_Speed=0
+#Prepare the html
 html_detail='''
 <br>
 <br>
@@ -51,6 +48,13 @@ html_detail='''
  border="1" cellpadding="2" cellspacing="2">
   <tbody>
 '''
+
+# Process the data for reporting
+Exchange_Total=0
+Total_Uniq=0
+Total_Speed=0
+Peering={}
+
 for i in Exchange:
     Total_Uniq+=1
     Speed=0
@@ -64,21 +68,19 @@ for i in Exchange:
         html_detail+='<td>'+ j['ipaddr4'] +'</td>'
         if j['ipaddr6'] :
                 html_detail+='<td width="180">IPV6 Peering Address</td>'
-                html_detail+='<td>'+ j['ipaddr6'] +'</td>'
+                html_detail+='<td>'+ j['ipaddr6'] +'</td>'          
         else:
                 html_detail+='<td width="180">IPV6 Peering Address</td>'
                 html_detail+='<td></td>'                
         html_detail+='<td width="100">Speed</td>'
         html_detail+='<td width="80">'+ str(j['speed']) +' M</td></tr>'
-    html_detail+='</tr>'
     html_detail+='<tr></td><td></td><td></td><td></td><td></td><td>Total Speed</td><td>'+ str(Speed)+' M</td> </tr>'
-
-
+    Peering[Exchange[i][0]['name']]=str(Speed)
+        
 #Create HTML File as an Output Result
 html='''
 <html>
 <body>
-
 <font size="+2"><span
  style="color: rgb(0, 102, 0); font-weight: bold;">Executive
 Summary for AS-'''+str(ASN)+\
@@ -107,14 +109,11 @@ Organization Peering</td>
 '''
 G</td>
     </tr>
-
   </tbody>
 </table>
 <font size="+2"><span
  style="color: rgb(0, 102, 0); font-weight: bold;"></span></font>
-
-
-
+ <br> <a href="http://ec2-13-59-75-185.us-east-2.compute.amazonaws.com">BACK</a> <br>
 '''
 html+=html_detail
 html+='''
@@ -122,12 +121,40 @@ html+='''
 </body>
 </html>
 '''
-#f=open("C:\\Summary.html","w")
-#f.write(html)
-#f.close()
 
-#print the output to HTML instead of files
+#print the output to HTML format
 print html
 
+# Storing the result to MySQLDB
+config = {
+  'user': 'admin',
+  'password': 'admin123',
+  'host': '127.0.0.1',
+  'database': 'ASN_Summary',
+  'raise_on_warnings': True,
+  'use_pure': False,
+}
+conn = mysql.connector.connect(**config)
+cursor=conn.cursor()
+Report_Time=datetime.now().isoformat()
+# ASN
+# Report_Time
+# Exchange_Total
+# Total_Uniq
+# Total Speed
+# html_detail
+query='INSERT INTO Report_Summary (ASN,Report_id,Exchange_Total,Total_Uniq,Total_Speed,html_detail)\
+                VALUES ({0},"{1}",{2},{3},{4},\'{5}\')'.format(ASN,Report_Time,Exchange_Total,Total_Uniq,Total_Speed,html)
+cursor.execute(query)
+conn.commit()
 
-
+'''
+#additional table for charting #next feature if
+for i in Peering:
+        query="INSERT into Peering_Detail peer,totalspeed VALUE {0},{1}".format(i,Peering[i])
+        cursor.execute(query)
+        conn.commit()
+        
+cursor.close()
+conn.close()
+'''
